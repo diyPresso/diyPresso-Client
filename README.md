@@ -226,22 +226,22 @@ See [WINDOWS_SETUP.md](WINDOWS_SETUP.md) for detailed Windows build instructions
 build-windows.bat
 ```
 
-### macOS/Linux
+### macOS
 1. **Install dependencies via vcpkg:**
    ```bash
    vcpkg install libusbp nlohmann-json cli11
    ```
 
-2. **Configure and build:**
+2. **Build universal binary (ARM + Intel):**
    ```bash
-   mkdir build && cd build
-   cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-   make
+   ./build-macos.sh
    ```
+   
+   This creates a binary that works on both Apple Silicon and Intel Macs.
 
 3. **Run:**
    ```bash
-   ./diypresso info
+   ./build/diypresso info
    ```
 
 ## 📋 Development Status

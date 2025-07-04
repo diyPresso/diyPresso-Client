@@ -9,7 +9,7 @@ for arg in "$@"; do
 done
 
 echo "==================================="
-echo "diyPresso Client C++ - macOS Build"
+echo "diyPresso Client C++ - macOS Build (ARM + Intel)"
 echo "==================================="
 
 # Colors for output
@@ -65,21 +65,6 @@ else
     echo "Using VCPKG_ROOT: $VCPKG_ROOT"
 fi
 
-# Determine target triplet based on architecture
-ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ]; then
-    TARGET_TRIPLET="arm64-osx"
-else
-    TARGET_TRIPLET="x64-osx"
-fi
-
-echo "Detected architecture: $ARCH"
-echo "Using target triplet: $TARGET_TRIPLET"
-
-# Install dependencies via vcpkg
-echo ""
-echo "Installing dependencies via vcpkg..."
-
 # Use the vcpkg binary (either from VCPKG_ROOT or PATH)
 if [ -f "$VCPKG_ROOT/vcpkg" ]; then
     VCPKG_CMD="$VCPKG_ROOT/vcpkg"
@@ -90,68 +75,133 @@ else
     exit 1
 fi
 
-$VCPKG_CMD install nlohmann-json:$TARGET_TRIPLET  
-$VCPKG_CMD install cli11:$TARGET_TRIPLET
-$VCPKG_CMD install libusbp:$TARGET_TRIPLET
+# Install dependencies for both architectures
+echo ""
+echo "Installing dependencies for both architectures..."
+
+# Install for ARM64
+echo "Installing ARM64 dependencies..."
+$VCPKG_CMD install nlohmann-json:arm64-osx
+$VCPKG_CMD install cli11:arm64-osx
+$VCPKG_CMD install libusbp:arm64-osx
+
+# Install for x64
+echo "Installing x64 dependencies..."
+$VCPKG_CMD install nlohmann-json:x64-osx
+$VCPKG_CMD install cli11:x64-osx
+$VCPKG_CMD install libusbp:x64-osx
 
 if [ $? -ne 0 ]; then
     print_error "Failed to install dependencies via vcpkg"
     exit 1
 fi
 
-# Create/clean build directory
+# Create/clean build directories
 echo ""
-echo "Setting up build directory..."
+echo "Setting up build directories..."
 if [ -d "build" ]; then
     echo "Cleaning existing build directory..."
     rm -rf build
 fi
-mkdir build
-cd build
+mkdir -p build/arm64 build/x64
 
-# Configure with CMake using the parameters that worked
-echo ""
-echo "Configuring with CMake..."
-cmake .. \
-    -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-    -DCMAKE_PREFIX_PATH="$VCPKG_ROOT/installed/$TARGET_TRIPLET" \
-    -D_VCPKG_INSTALLED_DIR="$VCPKG_ROOT/installed" \
-    -DVCPKG_TARGET_TRIPLET="$TARGET_TRIPLET" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-if [ $? -ne 0 ]; then
-    print_error "CMake configuration failed!"
-    exit 1
-fi
-
-# Build the project
-echo ""
-echo "Building project..."
-make -j$(sysctl -n hw.ncpu)
-
-if [ $? -ne 0 ]; then
-    print_error "Build failed!"
-    exit 1
-fi
-
-echo ""
-print_success "==================================="
-print_success "Build completed successfully!"
-print_success "Executable: build/diypresso"
-print_success "==================================="
-
-# Test the executable
-echo ""
-echo "Testing executable..."
-if [ -x "./diypresso" ]; then
-    ./diypresso --help
+# Function to build for a specific architecture
+build_for_arch() {
+    local arch=$1
+    local triplet=$2
+    local build_dir="build/$arch"
+    
     echo ""
-    print_success "Executable is working correctly!"
+    echo "Building for $arch architecture..."
+    echo "Using triplet: $triplet"
+    
+    cd "$build_dir"
+    
+    # Map architecture names for CMAKE_OSX_ARCHITECTURES
+    local cmake_arch="$arch"
+    if [ "$arch" = "x64" ]; then
+        cmake_arch="x86_64"
+    fi
+    
+    # Configure with CMake
+    echo "Configuring CMake for $arch..."
+    cmake ../.. \
+        -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+        -DCMAKE_PREFIX_PATH="$VCPKG_ROOT/installed/$triplet" \
+        -D_VCPKG_INSTALLED_DIR="$VCPKG_ROOT/installed" \
+        -DVCPKG_TARGET_TRIPLET="$triplet" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_OSX_ARCHITECTURES="$cmake_arch"
+    
+    if [ $? -ne 0 ]; then
+        print_error "CMake configuration failed for $arch!"
+        cd ../..
+        exit 1
+    fi
+    
+    # Build the project
+    echo "Building project for $arch..."
+    make -j$(sysctl -n hw.ncpu)
+    
+    if [ $? -ne 0 ]; then
+        print_error "Build failed for $arch!"
+        cd ../..
+        exit 1
+    fi
+    
+    echo "Build completed for $arch"
+    cd ../..
+}
+
+# Build for both architectures
+build_for_arch "arm64" "arm64-osx"
+build_for_arch "x64" "x64-osx"
+
+# Create universal binary
+echo ""
+echo "Creating universal binary..."
+
+# Check if both executables exist
+if [ ! -f "build/arm64/diypresso" ]; then
+    print_error "ARM64 executable not found!"
+    exit 1
+fi
+
+if [ ! -f "build/x64/diypresso" ]; then
+    print_error "x64 executable not found!"
+    exit 1
+fi
+
+# Create universal binary using lipo
+lipo -create build/arm64/diypresso build/x64/diypresso -output build/diypresso
+
+if [ $? -ne 0 ]; then
+    print_error "Failed to create universal binary!"
+    exit 1
+fi
+
+# Verify the universal binary
+echo "Verifying universal binary..."
+file build/diypresso
+lipo -info build/diypresso
+
+echo ""
+print_success "==================================="
+print_success "Universal build completed successfully!"
+print_success "Executable: build/diypresso (universal)"
+print_success "==================================="
+
+# Test the universal executable
+echo ""
+echo "Testing universal executable..."
+if [ -x "build/diypresso" ]; then
+    build/diypresso --help
+    echo ""
+    print_success "Universal executable is working correctly!"
 else
-    print_warning "Executable not found or not executable"
-    cd ..
-    exit 1 # Exit the script if the executable is not found or not executable
+    print_warning "Universal executable not found or not executable"
+    exit 1
 fi
 
 if [ $SKIP_PACKAGE -eq 0 ]; then
@@ -159,67 +209,100 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
     echo "Creating distribution package..."
     
     # Create package directory
-    mkdir -p "../bin/package-macos"
+    mkdir -p "bin/package-macos"
     
     # Clean existing package
-    rm -f ../bin/package-macos/*
+    rm -f bin/package-macos/*
     
     # Copy executable
-    if [ -x "./diypresso" ]; then
+    if [ -x "build/diypresso" ]; then
         echo "Copying diypresso..."
-        cp "./diypresso" "../bin/package-macos/"
+        cp "build/diypresso" "bin/package-macos/"
     else
         print_error "diypresso not found!"
-        cd ..
         exit 1
     fi
     
     # Copy bossac executable
-    if [ -f "../bin/bossac/bossac" ]; then
+    if [ -f "bin/bossac/bossac" ]; then
         echo "Copying bossac..."
-        cp "../bin/bossac/bossac" "../bin/package-macos/"
-        chmod +x "../bin/package-macos/bossac"
+        cp "bin/bossac/bossac" "bin/package-macos/"
+        chmod +x "bin/package-macos/bossac"
     else
         print_warning "bossac not found!"
-        cd ..
         exit 1
     fi
     
+    # Code signing
+    echo ""
+    echo "Code signing executables..."
+    
+    # Sign the main executable
+    if [ -x "bin/package-macos/diypresso" ]; then
+        echo "Signing diypresso..."
+        codesign --force --options runtime --deep --sign "Developer ID Application: diyPresso B.V. (V3QR5FV6B7)" --timestamp "bin/package-macos/diypresso"
+        if [ $? -ne 0 ]; then
+            print_warning "Failed to sign diypresso (this is normal if you don't have the certificate)"
+        else
+            print_success "Successfully signed diypresso"
+        fi
+    else
+        print_warning "diypresso not found for signing!"
+    fi
+    
+    # Sign the bossac executable
+    if [ -x "bin/package-macos/bossac" ]; then
+        echo "Signing bossac..."
+        codesign --force --options runtime --deep --sign "Developer ID Application: diyPresso B.V. (V3QR5FV6B7)" --timestamp "bin/package-macos/bossac"
+        if [ $? -ne 0 ]; then
+            print_warning "Failed to sign bossac (this is normal if you don't have the certificate)"
+        else
+            print_success "Successfully signed bossac"
+        fi
+    else
+        print_warning "bossac not found for signing!"
+    fi
+    
     # Copy firmware.bin
-    if [ -f "../bin/firmware/firmware.bin" ]; then
+    if [ -f "bin/firmware/firmware.bin" ]; then
         echo "Copying firmware.bin..."
-        cp "../bin/firmware/firmware.bin" "../bin/package-macos/"
+        cp "bin/firmware/firmware.bin" "bin/package-macos/"
     else
         print_warning "firmware.bin not found!"
-        cd ..
         exit 1
     fi
     
     # Copy LICENSE
-    if [ -f "../LICENSE" ]; then
+    if [ -f "LICENSE" ]; then
         echo "Copying LICENSE..."
-        cp "../LICENSE" "../bin/package-macos/"
+        cp "LICENSE" "bin/package-macos/"
     else
         print_warning "LICENSE not found!"
-        cd ..
         exit 1
     fi
     
     # Create ZIP package
     echo "Creating ZIP package..."
-    cd ../bin
+    cd bin
+    
+    # Remove existing ZIP file to ensure clean creation
+    if [ -f "diyPresso-Client-macOS.zip" ]; then
+        echo "Removing existing ZIP file..."
+        rm -f "diyPresso-Client-macOS.zip"
+    fi
+    
     if command -v zip >/dev/null 2>&1; then
         zip -r "diyPresso-Client-macOS.zip" package-macos/
         if [ $? -eq 0 ]; then
             print_success "Successfully created diyPresso-Client-macOS.zip"
         else
             print_warning "Failed to create ZIP package"
-            cd ../..
+            cd ..
             exit 1
         fi
     else
         print_warning "zip command not found, skipping ZIP creation"
-        cd ../..
+        cd ..
         exit 1
     fi
     cd ..
@@ -233,9 +316,6 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
 else
     echo "Skipping package creation (due to --no-package argument)."
 fi
-
-# Return to project root
-cd ..
 
 echo ""
 print_success "==================================="

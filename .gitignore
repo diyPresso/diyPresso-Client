@@ -38,4 +38,7 @@ build/
 # Settings backup files, shouyld be good for the next 75 years
 settings_20*.json
 
+# Logs
+*.log
+
 .DS_Store
