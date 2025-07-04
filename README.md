@@ -12,13 +12,13 @@ C++ management client for diyPresso espresso machine. This application provides 
    - Go to the [release page](https://github.com/diyPresso/diyPresso-Client/releases/latest) of this github repository.
    - Click **diyPresso-Client-Windows.zip** to download it.
    
-   ![Download the Windows package](images/win_step_1.png)  
+   <img src="images/win_step_1.png" alt="Download the Windows package" width="250">  
 
 2. **Extract the files**
    - Open your **Downloads** folder.
    - Right-click `diyPresso-Client-Windows.zip` → choose **Extract All...** and click **Extract**.
    
-   ![Extract the ZIP file](images/win_step_2.png)
+   <img src="images/win_step_2.png" alt="Extract the ZIP file" width="360">
 
 3. **Open the extracted folder**
    - Double-click the new `diyPresso-Client-Windows` folder to open it if it does not open automatically.  
@@ -27,7 +27,7 @@ C++ management client for diyPresso espresso machine. This application provides 
    - Click the folder's address bar (top of the window).
    - Type `cmd` and press **Enter**.
    
-   ![Open Command Prompt](images/win_step_4.png)
+   <img src="images/win_step_4.png" alt="Open Command Prompt" width="360">
 
 5. **Turn of your diyPresso machine**
    - Make sure your diyPresso machine is **fully turned off**.
@@ -39,7 +39,7 @@ C++ management client for diyPresso espresso machine. This application provides 
      diypresso upload-firmware
      ```
    
-   ![Run the firmware upload command](images/win_step_6.png)
+   <img src="images/win_step_6.png" alt="Run the firmware upload command" width="800">
 
 7. **Connect the USB Cable**
    - Plug the USB cable into your diyPresso machine and your computer.
