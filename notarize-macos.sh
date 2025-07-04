@@ -141,7 +141,7 @@ if [ -n "$SUBMISSION_ID" ]; then
     unzip -q "$ZIP_FILE" -d "$TEMP_DIR"
     
     for exe in diypresso bossac; do
-        EXE_PATH="$TEMP_DIR/package-macos/$exe"
+        EXE_PATH="$TEMP_DIR/$exe"
         if [ -x "$EXE_PATH" ]; then
             print_info "Verifying $exe signature..."
             if codesign --verify --verbose=4 "$EXE_PATH" >/dev/null 2>&1; then

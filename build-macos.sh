@@ -292,7 +292,9 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
     fi
     
     if command -v zip >/dev/null 2>&1; then
-        zip -r "diyPresso-Client-macOS.zip" package-macos/
+        cd package-macos
+        zip -r "../diyPresso-Client-macOS.zip" .
+        cd ..
         if [ $? -eq 0 ]; then
             print_success "Successfully created diyPresso-Client-macOS.zip"
         else
