@@ -1,0 +1,51 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${env:VCPKG_ROOT}/installed/arm64-osx/include",
+                "${env:VCPKG_ROOT}/installed/arm64-osx/include/**",
+                "${env:VCPKG_ROOT}/installed/x64-osx/include",
+                "${env:VCPKG_ROOT}/installed/x64-osx/include/**"
+            ],
+            "defines": [],
+            "macFrameworkPath": [
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compilerArgs": [
+                "-std=c++17",
+                "-isystem",
+                "${env:VCPKG_ROOT}/installed/arm64-osx/include",
+                "-isystem",
+                "${env:VCPKG_ROOT}/installed/x64-osx/include"
+            ]
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${env:VCPKG_ROOT}/installed/x64-windows/include",
+                "${env:VCPKG_ROOT}/installed/x64-windows/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "_CRT_SECURE_NO_WARNINGS"
+            ],
+            "windowsSdkVersion": "10.0.22000.0",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.30.30705/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

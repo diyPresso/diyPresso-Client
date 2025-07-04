@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (prompt for args)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/diypresso",
+            "args": ["${input:commandline}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "preLaunchTask": "build"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "commandline",
+            "type": "pickString",
+            "description": "Select command to run",
+            "options": [
+                "info",
+                "monitor",
+                "upload-firmware"
+            ],
+            "default": "info"
+        }
+    ]
+} 

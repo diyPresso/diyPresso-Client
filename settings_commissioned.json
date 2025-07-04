@@ -1,0 +1,20 @@
+{
+    "commissioningDone": "1",
+    "crc": "2203501097",
+    "d": "70.00",
+    "extractionTime": "25.00",
+    "extractionWeight": "1.00",
+    "ff_brew": "35.00",
+    "ff_heat": "6.00",
+    "ff_ready": "6.00",
+    "i": "0.08",
+    "infusionTime": "1.00",
+    "p": "6.20",
+    "preInfusionTime": "3.00",
+    "shotCounter": "1",
+    "tareWeight": "-300.00",
+    "temperature": "22.00",
+    "trimWeight": "0.00",
+    "version": "1",
+    "wifiMode": "0"
+}
