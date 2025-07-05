@@ -244,25 +244,14 @@ build-windows.bat
    ./build/diypresso info
    ```
 
-## 📋 Development Status
-
-- [x] **Serial Communication** - USB enumeration and serial I/O
-- [x] **Basic CLI Interface** - Command parsing and device detection
-- [x] **Device Discovery** - Arduino MKR WiFi 1010 detection
-- [x] **Device Management** - DpcDevice class with connection management
-- [x] **Monitor Mode** - Raw serial output monitoring
-- [x] **Bootloader Reset** - 1200 baud trick implementation
-- [ ] **Settings Management** - GET/PUT settings with JSON I/O
-- [ ] **Firmware Upload** - bossac integration and bootloader reset
-- [ ] **Complete CLI** - All commands from Python version
-- [ ] **Windows Support** - Cross-platform compatibility
-- [ ] **Error Handling** - Comprehensive error management
-- [ ] **Documentation** - API documentation and examples
 
 ## 🚧 TODO
 
-- [ ] **Multi-platform macOS builds** - Create universal binaries (ARM + Intel) for macOS
-- [ ] **Add macOS code signing** - Implement code signing step in build script with developer ID and entitlements
+Must:
+- [ ] **macOs user instructions**
+
+Nice to have:
+- [ ] **Fetch bin** - Fetch latest bin from Github
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase
 - [ ] **Refactor global state** - Move g_device, g_interrupted, g_verbose into Application/context class for better testability
 - [ ] **Extract command logic** - Move CLI command implementations from main.cpp into separate command classes/functions
