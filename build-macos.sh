@@ -84,12 +84,14 @@ echo "Installing ARM64 dependencies..."
 $VCPKG_CMD install nlohmann-json:arm64-osx
 $VCPKG_CMD install cli11:arm64-osx
 $VCPKG_CMD install libusbp:arm64-osx
+$VCPKG_CMD install cpr:arm64-osx
 
 # Install for x64
 echo "Installing x64 dependencies..."
 $VCPKG_CMD install nlohmann-json:x64-osx
 $VCPKG_CMD install cli11:x64-osx
 $VCPKG_CMD install libusbp:x64-osx
+$VCPKG_CMD install cpr:x64-osx
 
 if [ $? -ne 0 ]; then
     print_error "Failed to install dependencies via vcpkg"

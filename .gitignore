@@ -42,3 +42,5 @@ settings_20*.json
 *.log
 
 .DS_Store
+compile_commands.json
+firmware.bin.backup.*

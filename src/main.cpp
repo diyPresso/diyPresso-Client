@@ -8,6 +8,7 @@
 #include "DpcSerial.h"
 #include "DpcSettings.h"
 #include "DpcFirmware.h"
+#include "DpcDownload.h"
 #include "DpcColors.h"
 
 const std::string VERSION = "1.0.0";
@@ -226,6 +227,30 @@ int main(int argc, char** argv) {
             }
         } catch (const std::exception& e) {
             std::cerr << DpcColors::error("Error during firmware upload: " + std::string(e.what())) << std::endl;
+            std::exit(1);
+        }
+    });
+
+    // Download firmware command
+    std::string download_version = "latest";
+    std::string download_url = "";
+    std::string download_output = "";
+    auto download_cmd = app.add_subcommand("download", "Download firmware from GitHub");
+    download_cmd->add_flag("-v,--verbose", g_verbose, "Enable verbose mode");
+    download_cmd->add_option("--version", download_version, "Specific version/tag to download (default: latest)");
+    download_cmd->add_option("--binary-url", download_url, "Custom URL to download firmware from");
+    download_cmd->add_option("-o,--output", download_output, "Output file path (default: firmware.bin)");
+    download_cmd->callback([&]() {
+        try {
+            // Create download manager
+            DpcDownload downloader(g_verbose);
+            
+            if (!downloader.downloadFirmware(download_version, download_url, download_output)) {
+                std::cerr << DpcColors::error("Firmware download failed!") << std::endl;
+                std::exit(1);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << DpcColors::error("Error during firmware download: " + std::string(e.what())) << std::endl;
             std::exit(1);
         }
     });

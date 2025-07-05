@@ -17,6 +17,7 @@ echo Installing dependencies via vcpkg...
 %VCPKG_ROOT%\vcpkg.exe install nlohmann-json:x64-windows
 %VCPKG_ROOT%\vcpkg.exe install cli11:x64-windows
 %VCPKG_ROOT%\vcpkg.exe install libusbp:x64-windows
+%VCPKG_ROOT%\vcpkg.exe install cpr:x64-windows
 
 REM Create build directory
 if not exist build mkdir build

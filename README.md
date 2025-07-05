@@ -65,7 +65,10 @@ C++ management client for diyPresso espresso machine. This application provides 
 ./diypresso get-settings
 ./diypresso restore-settings --settings-file backup.json
 
-# upload firmare
+# Firmware management
+./diypresso download                                    # Download latest firmware
+./diypresso download --version=v1.7.0                 # Download specific version
+./diypresso download --binary-url=https://example.com/firmware.bin  # Custom URL
 ./diypresso upload-firmware --binary-file firmware.bin
 ```
 
@@ -85,7 +88,7 @@ The application follows a **device-centric architecture** with clear ownership a
 │                      (main.cpp)                            │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐ │
 │  │   monitor   │ │get-settings │ │upload-firmware│ │ info │ │
-│  │    help     │ │restore-sett │ │             │ │      │ │
+│  │    help     │ │restore-sett │ │   download  │ │      │ │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -112,14 +115,14 @@ The application follows a **device-centric architecture** with clear ownership a
 │                              │                              │
 │                              ▼                              │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  DpcSettings    │  │  DpcFirmware    │  │  (Future)    │ │
-│  │   (Service)     │  │   (Service)     │  │  Services    │ │
+│  │  DpcSettings    │  │  DpcFirmware    │  │  DpcDownload │ │
+│  │   (Service)     │  │   (Service)     │  │  (Service)   │ │
 │  │                 │  │                 │  │              │ │
-│  │ • get_settings  │  │ • upload        │  │ • ...        │ │
-│  │ • put_settings  │  │ • bossac        │  │              │ │
-│  │ • save_to_file  │  │ • validation    │  │              │ │
-│  │ • load_from_file│  │ • workflow      │  │              │ │
-│  │ • validation    │  │ • safety checks │  │              │ │
+│  │ • get_settings  │  │ • upload        │  │ • download   │ │
+│  │ • put_settings  │  │ • bossac        │  │ • GitHub API │ │
+│  │ • save_to_file  │  │ • validation    │  │ • progress   │ │
+│  │ • load_from_file│  │ • workflow      │  │ • validation │ │
+│  │ • validation    │  │ • safety checks │  │ • backup     │ │
 │  └─────────────────┘  └─────────────────┘  └──────────────┘ │
 │         │                      │                   │        │
 │         └──────────────────────┼───────────────────┘        │
@@ -156,8 +159,9 @@ diyPresso-Client-cpp/
 │   ├── main.cpp             # ✅ CLI interface & command routing
 │   ├── DpcSerial.h/.cpp     # ✅ Serial communication layer
 │   ├── DpcDevice.h/.cpp     # ✅ Device state & operations
-│   ├── DpcSettings.h/.cpp   # 🔲 Settings management
-│   └── DpcFirmware.h/.cpp   # 🔲 Firmware upload & bootloader
+│   ├── DpcSettings.h/.cpp   # ✅ Settings management
+│   ├── DpcFirmware.h/.cpp   # ✅ Firmware upload & bootloader
+│   └── DpcDownload.h/.cpp   # ✅ Firmware download from GitHub
 │
 ├── bin/                     # Binaries and tools
 │   ├── firmware/            # Firmware binary files
@@ -196,7 +200,7 @@ Manages device connection and basic operations:
 
 
 ### **DpcSettings** - Settings Management
-**Status:** 🔲 Planned
+**Status:** ✅ Implemented
 
 Handles all settings-related operations:
 - GET/PUT settings protocol implementation
@@ -204,13 +208,23 @@ Handles all settings-related operations:
 - Settings validation, backup and restore
 
 ### **DpcFirmware** - Firmware Upload & Bootloader
-**Status:** 🔲 Planned
+**Status:** ✅ Implemented
 
 Manages firmware upload and bootloader operations:
 - Bootloader reset (1200 baud trick)
 - bossac integration for firmware upload
 - Complete update workflow with settings backup/restore
 - Firmware validation
+
+### **DpcDownload** - Firmware Download
+**Status:** ✅ Implemented
+
+Handles automatic firmware downloading from GitHub:
+- Download latest firmware from GitHub releases
+- Download specific versions by tag
+- Custom URL support for alternative firmware sources
+- Progress indication and file validation
+- Automatic backup of existing firmware
 
 
 
@@ -251,7 +265,7 @@ Must:
 - [ ] **macOs user instructions**
 
 Nice to have:
-- [ ] **Fetch bin** - Fetch latest bin from Github
+- [x] **Fetch bin** - Fetch latest bin from Github
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase
 - [ ] **Refactor global state** - Move g_device, g_interrupted, g_verbose into Application/context class for better testability
 - [ ] **Extract command logic** - Move CLI command implementations from main.cpp into separate command classes/functions
