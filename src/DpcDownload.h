@@ -10,10 +10,10 @@ public:
     // Constructor
     DpcDownload(bool verbose = false);
     
-    // Main download functionality
-    bool downloadFirmware(const std::string& version = "latest", 
-                         const std::string& customUrl = "",
-                         const std::string& outputPath = "");
+    // Main download functionality, returns the path to the downloaded firmware file
+    std::string downloadFirmware(const std::string& version = "latest", 
+                                const std::string& customUrl = "",
+                                const std::string& outputPath = "");
     
     // Utility methods
     bool checkExistingFirmware(const std::string& outputPath = "");

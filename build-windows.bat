@@ -128,14 +128,6 @@ if /i "%package_choice%"=="y" (
         echo WARNING: bossac not found!
     )
     
-    REM Copy firmware.bin
-    if exist "..\bin\firmware\firmware.bin" (
-        echo Copying firmware.bin...
-        copy "..\bin\firmware\firmware.bin" "..\bin\package-win\"
-    ) else (
-        echo WARNING: firmware.bin not found!
-    )
-    
     REM Copy LICENSE
     if exist "..\LICENSE" (
         echo Copying LICENSE...

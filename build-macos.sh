@@ -265,15 +265,6 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
         print_warning "bossac not found for signing!"
     fi
     
-    # Copy firmware.bin
-    if [ -f "bin/firmware/firmware.bin" ]; then
-        echo "Copying firmware.bin..."
-        cp "bin/firmware/firmware.bin" "bin/package-macos/"
-    else
-        print_warning "firmware.bin not found!"
-        exit 1
-    fi
-    
     # Copy LICENSE
     if [ -f "LICENSE" ]; then
         echo "Copying LICENSE..."

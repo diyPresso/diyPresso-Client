@@ -14,7 +14,7 @@
 DpcDownload::DpcDownload(bool verbose) : m_verbose(verbose) {
 }
 
-bool DpcDownload::downloadFirmware(const std::string& version, const std::string& customUrl, const std::string& outputPath) {
+std::string DpcDownload::downloadFirmware(const std::string& version, const std::string& customUrl, const std::string& outputPath) {
     std::cout << DpcColors::highlight("=== diyPresso Firmware Download ===") << std::endl;
     
     // Determine output path
@@ -25,17 +25,16 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
         std::cout << "Output path: " << finalOutputPath << std::endl;
     }
     
-    // Check if firmware already exists
+    // Check if firmware already exists and backup if needed
     if (checkExistingFirmware(finalOutputPath)) {
-        if (!promptOverwriteExisting(finalOutputPath)) {
-            std::cout << "Download cancelled by user." << std::endl;
-            return false;
-        }
+        std::cout << "Existing firmware found: " << finalOutputPath << std::endl;
         
         // Backup existing file
         backupPath = backupExistingFile(finalOutputPath);
         if (backupPath.empty()) {
             std::cerr << DpcColors::warning("Failed to backup existing firmware file") << std::endl;
+        } else {
+            std::cout << "Backed up existing firmware" << std::endl;
         }
     }
     
@@ -50,7 +49,7 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
             targetVersion = getLatestVersionTag();
             if (targetVersion.empty()) {
                 std::cerr << DpcColors::error("Failed to get latest version from GitHub") << std::endl;
-                return false;
+                return "";
             }
             std::cout << "Latest version: " << targetVersion << std::endl;
         }
@@ -67,13 +66,13 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
     std::cout << "Downloading firmware..." << std::endl;
     if (!downloadFile(downloadUrl, finalOutputPath)) {
         std::cerr << DpcColors::error("Failed to download firmware") << std::endl;
-        return false;
+        return "";
     }
     
     // Validate downloaded file
     if (!validateFirmwareFile(finalOutputPath)) {
         std::cerr << DpcColors::error("Downloaded firmware file validation failed") << std::endl;
-        return false;
+        return "";
     }
     
     // Check if we have a backup and if the files are identical
@@ -89,7 +88,7 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
         std::cout << DpcColors::ok("Firmware downloaded successfully to: " + finalOutputPath) << std::endl;
     }
     
-    return true;
+    return finalOutputPath;
 }
 
 bool DpcDownload::checkExistingFirmware(const std::string& outputPath) {

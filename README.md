@@ -42,8 +42,9 @@ C++ management client for diyPresso espresso machine. This application provides 
    <img src="images/win_step_6.png" alt="Run the firmware upload command" width="800">
 
 7. **Connect the USB Cable**
-   - Plug the USB cable into your diyPresso machine and your computer.
-   - The update will start automatically. Watch the messages in the Command Prompt.
+   - The tool will first download the latest firmware from GitHub automatically.
+   - When prompted for device connection, plug the USB cable into your diyPresso machine and your computer.
+   - The firmware upload will start automatically. Watch the messages in the Command Prompt.
 
 9. **Final Steps**
    - Unplug the USB cable.
@@ -65,11 +66,18 @@ C++ management client for diyPresso espresso machine. This application provides 
 ./diypresso get-settings
 ./diypresso restore-settings --settings-file backup.json
 
-# Firmware management
-./diypresso download                                    # Download latest firmware
-./diypresso download --version=v1.7.0                 # Download specific version
-./diypresso download --binary-url=https://example.com/firmware.bin  # Custom URL
-./diypresso upload-firmware --binary-file firmware.bin
+# Firmware upload (automatically downloads latest firmware)
+./diypresso upload-firmware                          # Download latest + upload
+./diypresso upload-firmware --version=v1.7.0         # Download specific version + upload
+./diypresso upload-firmware --binary-url=https://example.com/firmware.bin  # Custom URL + upload
+./diypresso upload-firmware -b firmware.bin          # Skip download, use local file
+
+# Firmware download and information
+./diypresso download                                 # Download latest firmware
+./diypresso download --version=v1.7.0                # Download specific version
+./diypresso download --check                         # Check latest version info
+./diypresso download --check --version=v1.6.2        # Check specific version info
+./diypresso download --list-versions                 # List all available versions
 ```
 
 
@@ -211,20 +219,23 @@ Handles all settings-related operations:
 **Status:** ✅ Implemented
 
 Manages firmware upload and bootloader operations:
+- Automatic firmware download integration (downloads latest by default)
 - Bootloader reset (1200 baud trick)
 - bossac integration for firmware upload
 - Complete update workflow with settings backup/restore
 - Firmware validation
 
-### **DpcDownload** - Firmware Download
+### **DpcDownload** - Firmware Download & Information
 **Status:** ✅ Implemented
 
-Handles automatic firmware downloading from GitHub:
+Handles firmware downloading and version management from GitHub:
 - Download latest firmware from GitHub releases
 - Download specific versions by tag
 - Custom URL support for alternative firmware sources
 - Progress indication and file validation
 - Automatic backup of existing firmware
+- Version information checking (latest or specific versions)
+- List all available firmware versions with release dates
 
 
 
@@ -262,10 +273,9 @@ build-windows.bat
 ## 🚧 TODO
 
 Must:
-- [ ] **macOs user instructions**
+- [ ] **macOS user instructions**
 
 Nice to have:
-- [ ] **Fetch bin** - Fetch latest bin from Github: add to upload script, remove firmware from package, test windows.
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase
 - [ ] **Refactor global state** - Move g_device, g_interrupted, g_verbose into Application/context class for better testability
 - [ ] **Extract command logic** - Move CLI command implementations from main.cpp into separate command classes/functions
