@@ -64,26 +64,14 @@ if /i "%sign_choice%"=="y" (
         goto :end_signing
     )
     
-    REM Sign the executable
-    echo Signing diypresso.exe...
-    signtool sign /n "diyPresso B.V." /t http://time.certum.pl/ /fd sha256 /v /a 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 "Release\diypresso.exe"
+    REM Sign all files in a single batch operation (requires only one PIN entry)
+    echo Signing all files with certificate 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1...
+    signtool sign /sha1 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 /t http://time.certum.pl/ /fd sha256 /v "Release\diypresso.exe" "Release\*.dll"
     
     if %ERRORLEVEL% neq 0 (
-        echo WARNING: Failed to sign diypresso.exe
+        echo ERROR: Code signing failed!
     ) else (
-        echo Successfully signed diypresso.exe
-    )
-    
-    REM Sign all DLL files in the Release directory
-    echo Signing DLL files...
-    for %%f in ("Release\*.dll") do (
-        echo Signing %%f...
-        signtool sign /n "diyPresso B.V." /t http://time.certum.pl/ /fd sha256 /v /a 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 "%%f"
-        if %ERRORLEVEL% neq 0 (
-            echo WARNING: Failed to sign %%f
-        ) else (
-            echo Successfully signed %%f
-        )
+        echo Successfully signed all files!
     )
     
     echo Code signing process completed!
