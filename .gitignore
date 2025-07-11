@@ -44,3 +44,6 @@ settings_20*.json
 .DS_Store
 compile_commands.json
 firmware.bin.backup.*
+
+# VirusTotal CLI (downloaded binary)
+bin/virus-total/
