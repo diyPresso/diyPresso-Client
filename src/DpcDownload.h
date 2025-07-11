@@ -28,7 +28,9 @@ public:
     // File operations
     bool downloadFile(const std::string& url, const std::string& outputPath);
     bool validateFirmwareFile(const std::string& filePath);
-    bool backupExistingFile(const std::string& filePath);
+    std::string backupExistingFile(const std::string& filePath);
+    bool filesAreIdentical(const std::string& file1, const std::string& file2);
+    bool removeFile(const std::string& filePath);
     
     // User interaction
     bool promptOverwriteExisting(const std::string& filePath);

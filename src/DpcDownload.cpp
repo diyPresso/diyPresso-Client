@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <cstring>
 
 DpcDownload::DpcDownload(bool verbose) : m_verbose(verbose) {
 }
@@ -18,6 +19,7 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
     
     // Determine output path
     std::string finalOutputPath = outputPath.empty() ? getDefaultOutputPath() : outputPath;
+    std::string backupPath; // Store backup path for later comparison
     
     if (m_verbose) {
         std::cout << "Output path: " << finalOutputPath << std::endl;
@@ -31,7 +33,8 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
         }
         
         // Backup existing file
-        if (!backupExistingFile(finalOutputPath)) {
+        backupPath = backupExistingFile(finalOutputPath);
+        if (backupPath.empty()) {
             std::cerr << DpcColors::warning("Failed to backup existing firmware file") << std::endl;
         }
     }
@@ -73,7 +76,19 @@ bool DpcDownload::downloadFirmware(const std::string& version, const std::string
         return false;
     }
     
-    std::cout << DpcColors::ok("Firmware downloaded successfully to: " + finalOutputPath) << std::endl;
+    // Check if we have a backup and if the files are identical
+    if (!backupPath.empty() && filesAreIdentical(finalOutputPath, backupPath)) {
+        if (removeFile(backupPath)) {
+            std::cout << DpcColors::ok("Firmware downloaded successfully to: " + finalOutputPath) << std::endl;
+            std::cout << DpcColors::ok("Downloaded firmware is identical to previous version - backup removed") << std::endl;
+        } else {
+            std::cout << DpcColors::ok("Firmware downloaded successfully to: " + finalOutputPath) << std::endl;
+            std::cout << DpcColors::warning("Downloaded firmware is identical to previous version but backup cleanup failed") << std::endl;
+        }
+    } else {
+        std::cout << DpcColors::ok("Firmware downloaded successfully to: " + finalOutputPath) << std::endl;
+    }
+    
     return true;
 }
 
@@ -223,9 +238,9 @@ bool DpcDownload::validateFirmwareFile(const std::string& filePath) {
     return true;
 }
 
-bool DpcDownload::backupExistingFile(const std::string& filePath) {
+std::string DpcDownload::backupExistingFile(const std::string& filePath) {
     if (!fileExists(filePath)) {
-        return true; // Nothing to backup
+        return ""; // Nothing to backup
     }
     
     std::string backupPath = filePath + ".backup." + getCurrentTimestamp();
@@ -235,12 +250,12 @@ bool DpcDownload::backupExistingFile(const std::string& filePath) {
         if (m_verbose) {
             std::cout << "Backed up existing file to: " << backupPath << std::endl;
         }
-        return true;
+        return backupPath;
     } catch (const std::exception& e) {
         if (m_verbose) {
             std::cerr << "Failed to backup file: " << e.what() << std::endl;
         }
-        return false;
+        return "";
     }
 }
 
@@ -311,4 +326,73 @@ std::string DpcDownload::sanitizeVersion(const std::string& version) {
     }
     
     return clean;
+}
+
+bool DpcDownload::filesAreIdentical(const std::string& file1, const std::string& file2) {
+    if (!fileExists(file1) || !fileExists(file2)) {
+        return false;
+    }
+    
+    // Compare file sizes first (quick check)
+    std::ifstream f1(file1, std::ios::binary | std::ios::ate);
+    std::ifstream f2(file2, std::ios::binary | std::ios::ate);
+    
+    if (!f1.is_open() || !f2.is_open()) {
+        return false;
+    }
+    
+    auto size1 = f1.tellg();
+    auto size2 = f2.tellg();
+    
+    if (size1 != size2) {
+        return false;
+    }
+    
+    // If sizes match, compare content
+    f1.seekg(0);
+    f2.seekg(0);
+    
+    const size_t bufferSize = 4096;
+    char buffer1[bufferSize];
+    char buffer2[bufferSize];
+    
+    while (true) {
+        f1.read(buffer1, bufferSize);
+        f2.read(buffer2, bufferSize);
+        
+        std::streamsize bytesRead1 = f1.gcount();
+        std::streamsize bytesRead2 = f2.gcount();
+        
+        // If different amounts were read, files are different
+        if (bytesRead1 != bytesRead2) {
+            return false;
+        }
+        
+        // If no bytes were read, we've reached the end of both files
+        if (bytesRead1 == 0) {
+            break;
+        }
+        
+        // Compare the content that was read
+        if (std::memcmp(buffer1, buffer2, bytesRead1) != 0) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool DpcDownload::removeFile(const std::string& filePath) {
+    try {
+        std::filesystem::remove(filePath);
+        if (m_verbose) {
+            std::cout << "Removed file: " << filePath << std::endl;
+        }
+        return true;
+    } catch (const std::exception& e) {
+        if (m_verbose) {
+            std::cerr << "Failed to remove file: " << e.what() << std::endl;
+        }
+        return false;
+    }
 } 

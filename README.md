@@ -265,7 +265,7 @@ Must:
 - [ ] **macOs user instructions**
 
 Nice to have:
-- [x] **Fetch bin** - Fetch latest bin from Github
+- [ ] **Fetch bin** - Fetch latest bin from Github: add to upload script, remove firmware from package, test windows.
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase
 - [ ] **Refactor global state** - Move g_device, g_interrupted, g_verbose into Application/context class for better testability
 - [ ] **Extract command logic** - Move CLI command implementations from main.cpp into separate command classes/functions
