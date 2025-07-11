@@ -19,10 +19,16 @@ if(WIN32)
     else()
         set(VCPKG_TARGET_TRIPLET "x86-windows" CACHE STRING "")
     endif()
-elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-    set(VCPKG_TARGET_TRIPLET "arm64-osx" CACHE STRING "")
 elseif(APPLE)
-    set(VCPKG_TARGET_TRIPLET "x64-osx" CACHE STRING "")
+    # For macOS, the triplet should be set by the build script for cross-compilation
+    # Only set a default if not already specified
+    if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+            set(VCPKG_TARGET_TRIPLET "arm64-osx" CACHE STRING "")
+        else()
+            set(VCPKG_TARGET_TRIPLET "x64-osx" CACHE STRING "")
+        endif()
+    endif()
 endif()
 
 # Add source files here as you implement them
@@ -33,11 +39,13 @@ set(SOURCES
     src/DpcSettings.cpp
     src/DpcFirmware.cpp
     src/DpcColors.cpp
+    src/DpcDownload.cpp
 )
 
 # Find packages from vcpkg
 find_package(CLI11 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(cpr CONFIG REQUIRED)
 
 # Find libusbp using multiple approaches
 find_package(unofficial-libusbp CONFIG QUIET)
@@ -96,6 +104,7 @@ target_link_libraries(diypresso PRIVATE
     CLI11::CLI11
     nlohmann_json::nlohmann_json 
     ${LIBUSBP_TARGET}
+    cpr::cpr
     ${PLATFORM_LIBS}
 )
 

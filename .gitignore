@@ -26,10 +26,10 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+# # Executables
+# *.exe
+# *.out
+# *.app
 
 # Build and cache directories
 build/
@@ -38,4 +38,12 @@ build/
 # Settings backup files, shouyld be good for the next 75 years
 settings_20*.json
 
+# Logs
+*.log
+
 .DS_Store
+compile_commands.json
+firmware.bin.backup.*
+
+# VirusTotal CLI (downloaded binary)
+bin/virus-total/

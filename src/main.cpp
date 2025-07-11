@@ -1,5 +1,6 @@
 // diyPresso Client C++ - Platform support: macOS 13+ and Windows 10/11 only
 #include <iostream>
+#include <iomanip>
 #include <CLI/CLI.hpp>
 #include <chrono>
 #include <thread>
@@ -8,6 +9,7 @@
 #include "DpcSerial.h"
 #include "DpcSettings.h"
 #include "DpcFirmware.h"
+#include "DpcDownload.h"
 #include "DpcColors.h"
 
 const std::string VERSION = "1.0.0";
@@ -207,10 +209,14 @@ int main(int argc, char** argv) {
     // Upload firmware command
     std::string firmware_path = "";
     std::string bossac_path = "";
+    std::string upload_version = "latest";
+    std::string upload_binary_url = "";
     auto upload_cmd = app.add_subcommand("upload-firmware", "Upload firmware to the diyPresso controller");
     upload_cmd->add_flag("-v,--verbose", g_verbose, "Enable verbose mode");
-    upload_cmd->add_option("-b,--binary-file", firmware_path, "Specify the path to the firmware binary");
+    upload_cmd->add_option("-b,--binary-file", firmware_path, "Skip download and use provided firmware binary file");
     upload_cmd->add_option("--bossac-file", bossac_path, "Specify the path to the bossac tool");
+    upload_cmd->add_option("--version", upload_version, "Specific version/tag to download (default: latest)");
+    upload_cmd->add_option("--binary-url", upload_binary_url, "Custom URL to download firmware from");
     upload_cmd->callback([&]() {
         if (!wait_for_device_connection(device)) {
             std::exit(1);
@@ -220,12 +226,132 @@ int main(int argc, char** argv) {
             // Create firmware uploader
             DpcFirmware firmware_uploader(g_verbose);
             
-            if (!firmware_uploader.uploadFirmware(&device, firmware_path, bossac_path)) {
+            if (!firmware_uploader.uploadFirmware(&device, firmware_path, bossac_path, upload_version, upload_binary_url)) {
                 std::cerr << DpcColors::error("Firmware upload failed!") << std::endl;
                 std::exit(1);
             }
         } catch (const std::exception& e) {
             std::cerr << DpcColors::error("Error during firmware upload: " + std::string(e.what())) << std::endl;
+            std::exit(1);
+        }
+    });
+
+    // Download firmware command
+    std::string download_version = "latest";
+    std::string download_url = "";
+    std::string download_output = "";
+    bool check_version = false;
+    bool list_versions = false;
+    auto download_cmd = app.add_subcommand("download", "Download firmware from GitHub");
+    download_cmd->add_flag("-v,--verbose", g_verbose, "Enable verbose mode");
+    download_cmd->add_option("--version", download_version, "Specific version/tag to download or check.");
+    download_cmd->add_option("--binary-url", download_url, "Custom URL to download firmware from");
+    download_cmd->add_option("-o,--output", download_output, "Output file path (default: firmware.bin)");
+    download_cmd->add_flag("--check", check_version, "Show firmware version information (use with --version for specific version, defaults to latest version)");
+    download_cmd->add_flag("--list-versions", list_versions, "List all available firmware versions");
+    download_cmd->callback([&]() {
+        try {
+            // Create download manager
+            DpcDownload downloader(g_verbose);
+            
+            // Handle check version
+            if (check_version) {
+                std::string target_version = download_version;
+                
+                if (download_version == "latest") {
+                    std::cout << DpcColors::highlight("=== Latest Firmware Information ===") << std::endl;
+                    target_version = downloader.getLatestVersionTag();
+                    if (target_version.empty()) {
+                        std::cerr << DpcColors::error("Failed to get latest version from GitHub") << std::endl;
+                        std::exit(1);
+                    }
+                    
+                    auto release_info = downloader.getLatestRelease();
+                    std::cout << "Latest version: " << target_version << std::endl;
+                    
+                    if (release_info.contains("published_at")) {
+                        std::string datetime = release_info["published_at"].get<std::string>();
+                        // Convert from ISO format to readable format
+                        if (datetime.length() >= 19) {
+                            std::string date = datetime.substr(0, 10);           // YYYY-MM-DD
+                            std::string time = datetime.substr(11, 5);           // HH:MM
+                            std::cout << "Released: " << date << " " << time << " UTC" << std::endl;
+                        } else {
+                            std::cout << "Released: " << datetime << std::endl;
+                        }
+                    }
+                    
+                    if (g_verbose && release_info.contains("body")) {
+                        std::cout << "\nRelease Notes:" << std::endl;
+                        std::cout << release_info["body"].get<std::string>() << std::endl;
+                    }
+                } else {
+                    std::cout << DpcColors::highlight("=== Firmware Version Information ===") << std::endl;
+                    std::cout << "Version: " << target_version << std::endl;
+                }
+                
+                std::string download_url = downloader.buildDownloadUrl(target_version);
+                std::cout << "Download URL: " << download_url << std::endl;
+                
+                return;
+            }
+            
+            // Handle list versions
+            if (list_versions) {
+                std::cout << DpcColors::highlight("=== Available Firmware Versions ===") << std::endl;
+                auto releases = downloader.getAllReleases();
+                if (releases.empty()) {
+                    std::cerr << DpcColors::error("Failed to get available versions from GitHub") << std::endl;
+                    std::exit(1);
+                }
+                
+                std::cout << "Available firmware versions:" << std::endl;
+                for (size_t i = 0; i < releases.size(); ++i) {
+                    const auto& release = releases[i];
+                    
+                    if (release.contains("tag_name")) {
+                        std::string version = release["tag_name"].get<std::string>();
+                        
+                        // Build version display string
+                        std::string version_display = version;
+                        if (i == 0) {
+                            version_display += " (latest)";
+                        }
+                        
+                        // Left-align version in 12-character column + room for " (latest)"
+                        std::cout << "  " << std::left << std::setw(21) << version_display;
+                        
+                        // Add date and time if available
+                        if (release.contains("published_at")) {
+                            std::string datetime = release["published_at"].get<std::string>();
+                            if (datetime.length() >= 19) {
+                                std::string date = datetime.substr(0, 10);  // YYYY-MM-DD
+                                std::string time = datetime.substr(11, 5);  // HH:MM
+                                std::cout << "  " << date << "  " << time << " UTC";
+                            }
+                        }
+                        
+                        std::cout << std::endl;
+                    }
+                    
+                    // Limit output unless verbose
+                    if (!g_verbose && i >= 19) {
+                        std::cout << "  ... (" << (releases.size() - i - 1) << " more versions)" << std::endl;
+                        std::cout << "  Use -v,--verbose to see all versions" << std::endl;
+                        break;
+                    }
+                }
+                return;
+            }
+            
+            // Normal download behavior
+            std::string downloaded_path = downloader.downloadFirmware(download_version, download_url, download_output);
+            if (downloaded_path.empty()) {
+                std::cerr << DpcColors::error("Firmware download failed!") << std::endl;
+                std::exit(1);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << DpcColors::error("Error during firmware download: " + std::string(e.what())) << std::endl;
             std::exit(1);
         }
     });

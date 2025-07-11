@@ -42,8 +42,9 @@ C++ management client for diyPresso espresso machine. This application provides 
    <img src="images/win_step_6.png" alt="Run the firmware upload command" width="800">
 
 7. **Connect the USB Cable**
-   - Plug the USB cable into your diyPresso machine and your computer.
-   - The update will start automatically. Watch the messages in the Command Prompt.
+   - The tool will first download the latest firmware from GitHub automatically.
+   - When prompted for device connection, plug the USB cable into your diyPresso machine and your computer.
+   - The firmware upload will start automatically. Watch the messages in the Command Prompt.
 
 9. **Final Steps**
    - Unplug the USB cable.
@@ -65,8 +66,18 @@ C++ management client for diyPresso espresso machine. This application provides 
 ./diypresso get-settings
 ./diypresso restore-settings --settings-file backup.json
 
-# upload firmare
-./diypresso upload-firmware --binary-file firmware.bin
+# Firmware upload (automatically downloads latest firmware)
+./diypresso upload-firmware                          # Download latest + upload
+./diypresso upload-firmware --version=v1.7.0         # Download specific version + upload
+./diypresso upload-firmware --binary-url=https://example.com/firmware.bin  # Custom URL + upload
+./diypresso upload-firmware -b firmware.bin          # Skip download, use local file
+
+# Firmware download and information
+./diypresso download                                 # Download latest firmware
+./diypresso download --version=v1.7.0                # Download specific version
+./diypresso download --check                         # Check latest version info
+./diypresso download --check --version=v1.6.2        # Check specific version info
+./diypresso download --list-versions                 # List all available versions
 ```
 
 
@@ -85,7 +96,7 @@ The application follows a **device-centric architecture** with clear ownership a
 │                      (main.cpp)                            │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────┐ │
 │  │   monitor   │ │get-settings │ │upload-firmware│ │ info │ │
-│  │    help     │ │restore-sett │ │             │ │      │ │
+│  │    help     │ │restore-sett │ │   download  │ │      │ │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -112,14 +123,14 @@ The application follows a **device-centric architecture** with clear ownership a
 │                              │                              │
 │                              ▼                              │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  DpcSettings    │  │  DpcFirmware    │  │  (Future)    │ │
-│  │   (Service)     │  │   (Service)     │  │  Services    │ │
+│  │  DpcSettings    │  │  DpcFirmware    │  │  DpcDownload │ │
+│  │   (Service)     │  │   (Service)     │  │  (Service)   │ │
 │  │                 │  │                 │  │              │ │
-│  │ • get_settings  │  │ • upload        │  │ • ...        │ │
-│  │ • put_settings  │  │ • bossac        │  │              │ │
-│  │ • save_to_file  │  │ • validation    │  │              │ │
-│  │ • load_from_file│  │ • workflow      │  │              │ │
-│  │ • validation    │  │ • safety checks │  │              │ │
+│  │ • get_settings  │  │ • upload        │  │ • download   │ │
+│  │ • put_settings  │  │ • bossac        │  │ • GitHub API │ │
+│  │ • save_to_file  │  │ • validation    │  │ • progress   │ │
+│  │ • load_from_file│  │ • workflow      │  │ • validation │ │
+│  │ • validation    │  │ • safety checks │  │ • backup     │ │
 │  └─────────────────┘  └─────────────────┘  └──────────────┘ │
 │         │                      │                   │        │
 │         └──────────────────────┼───────────────────┘        │
@@ -156,8 +167,9 @@ diyPresso-Client-cpp/
 │   ├── main.cpp             # ✅ CLI interface & command routing
 │   ├── DpcSerial.h/.cpp     # ✅ Serial communication layer
 │   ├── DpcDevice.h/.cpp     # ✅ Device state & operations
-│   ├── DpcSettings.h/.cpp   # 🔲 Settings management
-│   └── DpcFirmware.h/.cpp   # 🔲 Firmware upload & bootloader
+│   ├── DpcSettings.h/.cpp   # ✅ Settings management
+│   ├── DpcFirmware.h/.cpp   # ✅ Firmware upload & bootloader
+│   └── DpcDownload.h/.cpp   # ✅ Firmware download from GitHub
 │
 ├── bin/                     # Binaries and tools
 │   ├── firmware/            # Firmware binary files
@@ -196,7 +208,7 @@ Manages device connection and basic operations:
 
 
 ### **DpcSettings** - Settings Management
-**Status:** 🔲 Planned
+**Status:** ✅ Implemented
 
 Handles all settings-related operations:
 - GET/PUT settings protocol implementation
@@ -204,13 +216,26 @@ Handles all settings-related operations:
 - Settings validation, backup and restore
 
 ### **DpcFirmware** - Firmware Upload & Bootloader
-**Status:** 🔲 Planned
+**Status:** ✅ Implemented
 
 Manages firmware upload and bootloader operations:
+- Automatic firmware download integration (downloads latest by default)
 - Bootloader reset (1200 baud trick)
 - bossac integration for firmware upload
 - Complete update workflow with settings backup/restore
 - Firmware validation
+
+### **DpcDownload** - Firmware Download & Information
+**Status:** ✅ Implemented
+
+Handles firmware downloading and version management from GitHub:
+- Download latest firmware from GitHub releases
+- Download specific versions by tag
+- Custom URL support for alternative firmware sources
+- Progress indication and file validation
+- Automatic backup of existing firmware
+- Version information checking (latest or specific versions)
+- List all available firmware versions with release dates
 
 
 
@@ -226,43 +251,31 @@ See [WINDOWS_SETUP.md](WINDOWS_SETUP.md) for detailed Windows build instructions
 build-windows.bat
 ```
 
-### macOS/Linux
+### macOS
 1. **Install dependencies via vcpkg:**
    ```bash
    vcpkg install libusbp nlohmann-json cli11
    ```
 
-2. **Configure and build:**
+2. **Build universal binary (ARM + Intel):**
    ```bash
-   mkdir build && cd build
-   cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-   make
+   ./build-macos.sh
    ```
+   
+   This creates a binary that works on both Apple Silicon and Intel Macs.
 
 3. **Run:**
    ```bash
-   ./diypresso info
+   ./build/diypresso info
    ```
 
-## 📋 Development Status
-
-- [x] **Serial Communication** - USB enumeration and serial I/O
-- [x] **Basic CLI Interface** - Command parsing and device detection
-- [x] **Device Discovery** - Arduino MKR WiFi 1010 detection
-- [x] **Device Management** - DpcDevice class with connection management
-- [x] **Monitor Mode** - Raw serial output monitoring
-- [x] **Bootloader Reset** - 1200 baud trick implementation
-- [ ] **Settings Management** - GET/PUT settings with JSON I/O
-- [ ] **Firmware Upload** - bossac integration and bootloader reset
-- [ ] **Complete CLI** - All commands from Python version
-- [ ] **Windows Support** - Cross-platform compatibility
-- [ ] **Error Handling** - Comprehensive error management
-- [ ] **Documentation** - API documentation and examples
 
 ## 🚧 TODO
 
-- [ ] **Multi-platform macOS builds** - Create universal binaries (ARM + Intel) for macOS
-- [ ] **Add macOS code signing** - Implement code signing step in build script with developer ID and entitlements
+Must:
+- [ ] **macOS user instructions**
+
+Nice to have:
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase
 - [ ] **Refactor global state** - Move g_device, g_interrupted, g_verbose into Application/context class for better testability
 - [ ] **Extract command logic** - Move CLI command implementations from main.cpp into separate command classes/functions

@@ -10,7 +10,8 @@ public:
     DpcFirmware(bool verbose = false);
     
     // Main firmware upload function
-    bool uploadFirmware(DpcDevice* device, const std::string& firmwarePath = "", const std::string& bossacPath = "");
+    bool uploadFirmware(DpcDevice* device, const std::string& firmwarePath = "", const std::string& bossacPath = "", 
+                       const std::string& version = "latest", const std::string& binaryUrl = "");
     
     // Check if bossac executable exists and is accessible
     bool checkBossacExecutable(const std::string& bossacPath = "");
