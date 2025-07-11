@@ -231,7 +231,9 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
         cp "bin/bossac/bossac" "bin/package-macos/"
         chmod +x "bin/package-macos/bossac"
     else
-        print_warning "bossac not found!"
+        print_error "bossac not found at bin/bossac/bossac"
+        echo "The macOS package requires bossac for firmware uploads."
+        echo "Please ensure bossac is available in bin/bossac/ directory."
         exit 1
     fi
     

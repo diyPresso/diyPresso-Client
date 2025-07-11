@@ -101,7 +101,8 @@ if /i "%package_choice%"=="y" (
         copy "Release\diypresso.exe" "..\bin\package-win\"
     ) else (
         echo ERROR: diypresso.exe not found!
-        goto :end_packaging
+        pause
+        exit /b 1
     )
     
     REM Copy DLLs
@@ -113,7 +114,11 @@ if /i "%package_choice%"=="y" (
         echo Copying bossac.exe...
         copy "..\bin\bossac\bossac.exe" "..\bin\package-win\"
     ) else (
-        echo WARNING: bossac not found!
+        echo ERROR: bossac.exe not found at ..\bin\bossac\bossac.exe
+        echo The Windows package requires bossac.exe for firmware uploads.
+        echo Please download bossac.exe and place it in bin\bossac\ directory.
+        pause
+        exit /b 1
     )
     
     REM Copy LICENSE
