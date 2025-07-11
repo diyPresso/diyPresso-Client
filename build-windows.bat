@@ -17,6 +17,7 @@ echo Installing dependencies via vcpkg...
 %VCPKG_ROOT%\vcpkg.exe install nlohmann-json:x64-windows
 %VCPKG_ROOT%\vcpkg.exe install cli11:x64-windows
 %VCPKG_ROOT%\vcpkg.exe install libusbp:x64-windows
+%VCPKG_ROOT%\vcpkg.exe install cpr:x64-windows
 
 REM Create build directory
 if not exist build mkdir build
@@ -63,26 +64,14 @@ if /i "%sign_choice%"=="y" (
         goto :end_signing
     )
     
-    REM Sign the executable
-    echo Signing diypresso.exe...
-    signtool sign /n "diyPresso B.V." /t http://time.certum.pl/ /fd sha256 /v /a 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 "Release\diypresso.exe"
+    REM Sign all files in a single batch operation (requires only one PIN entry)
+    echo Signing all files with certificate 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1...
+    signtool sign /sha1 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 /t http://time.certum.pl/ /fd sha256 /v "Release\diypresso.exe" "Release\*.dll"
     
     if %ERRORLEVEL% neq 0 (
-        echo WARNING: Failed to sign diypresso.exe
+        echo ERROR: Code signing failed!
     ) else (
-        echo Successfully signed diypresso.exe
-    )
-    
-    REM Sign all DLL files in the Release directory
-    echo Signing DLL files...
-    for %%f in ("Release\*.dll") do (
-        echo Signing %%f...
-        signtool sign /n "diyPresso B.V." /t http://time.certum.pl/ /fd sha256 /v /a 2F4230F3EE88762E2194FAB43A2AD7DEEC1537A1 "%%f"
-        if %ERRORLEVEL% neq 0 (
-            echo WARNING: Failed to sign %%f
-        ) else (
-            echo Successfully signed %%f
-        )
+        echo Successfully signed all files!
     )
     
     echo Code signing process completed!
@@ -112,7 +101,8 @@ if /i "%package_choice%"=="y" (
         copy "Release\diypresso.exe" "..\bin\package-win\"
     ) else (
         echo ERROR: diypresso.exe not found!
-        goto :end_packaging
+        pause
+        exit /b 1
     )
     
     REM Copy DLLs
@@ -124,15 +114,11 @@ if /i "%package_choice%"=="y" (
         echo Copying bossac.exe...
         copy "..\bin\bossac\bossac.exe" "..\bin\package-win\"
     ) else (
-        echo WARNING: bossac not found!
-    )
-    
-    REM Copy firmware.bin
-    if exist "..\bin\firmware\firmware.bin" (
-        echo Copying firmware.bin...
-        copy "..\bin\firmware\firmware.bin" "..\bin\package-win\"
-    ) else (
-        echo WARNING: firmware.bin not found!
+        echo ERROR: bossac.exe not found at ..\bin\bossac\bossac.exe
+        echo The Windows package requires bossac.exe for firmware uploads.
+        echo Please download bossac.exe and place it in bin\bossac\ directory.
+        pause
+        exit /b 1
     )
     
     REM Copy LICENSE

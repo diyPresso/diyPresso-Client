@@ -1,6 +1,7 @@
 #include "DpcFirmware.h"
 #include "DpcSettings.h"
 #include "DpcDevice.h"
+#include "DpcDownload.h"
 #include "DpcColors.h"
 #include <iostream>
 #include <sstream>
@@ -22,7 +23,8 @@
 DpcFirmware::DpcFirmware(bool verbose) : m_verbose(verbose) {
 }
 
-bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwarePath, const std::string& bossacPath) {
+bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwarePath, const std::string& bossacPath, 
+                                const std::string& version, const std::string& binaryUrl) {
     std::cout << DpcColors::highlight("=== diyPresso Firmware Upload ===") << std::endl;
     
     // Step 0.1: Prepare settings manager and backup filename
@@ -30,8 +32,25 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     std::string backupFilename;
     bool skip_settings = false;
     
-    // Step 0.2: Determine paths
-    std::string finalFirmwarePath = firmwarePath.empty() ? getFirmwarePath() : firmwarePath;
+    // Step 0.2: Download firmware if no binary file provided
+    std::string finalFirmwarePath;
+    if (firmwarePath.empty()) {
+        std::cout << std::endl << DpcColors::step("Step 1/7: Downloading firmware...") << std::endl;
+        
+        // Create download manager
+        DpcDownload downloader(m_verbose);
+        
+        // Download to default location
+        finalFirmwarePath = downloader.downloadFirmware(version, binaryUrl, "");
+        if (finalFirmwarePath.empty()) {
+            std::cerr << DpcColors::error("Firmware download failed!") << std::endl;
+            return false;
+        }
+    } else {
+        finalFirmwarePath = firmwarePath;
+    }
+    
+    // Step 0.3: Determine bossac path
     std::string finalBossacPath = bossacPath.empty() ? getBossacPath() : bossacPath;
     
     if (m_verbose) {
@@ -40,7 +59,7 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     }
     
     // Step 1.1: Print and check bossac executable
-    std::cout << std::endl << DpcColors::step("Step 1/6: Checking bossac executable...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 2/7: Checking bossac executable...") << std::endl;
     if (!checkBossacExecutable(finalBossacPath)) {
         std::cerr << DpcColors::error("bossac executable not found or not accessible at: " + finalBossacPath) << std::endl;
         return false;
@@ -48,14 +67,14 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     std::cout << DpcColors::ok("bossac executable found and accessible") << std::endl;
     
     // Step 2.1: Print and check firmware file
-    std::cout << std::endl << DpcColors::step("Step 2/6: Checking firmware file...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 3/7: Checking firmware file...") << std::endl;
     if (!checkFirmwareFile(finalFirmwarePath)) {
         std::cerr << DpcColors::error("Firmware file not found at: " + finalFirmwarePath) << std::endl;
         return false;
     }
     std::cout << DpcColors::ok("Firmware file found: " + finalFirmwarePath) << std::endl;
     
-    std::cout << std::endl << DpcColors::step("Step 3/6: Retrieving and backing up current settings...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 4/7: Retrieving and backing up current settings...") << std::endl;
     
     // Step 3.1: Validate device pointer
     if (!device) {
@@ -95,7 +114,7 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     }
     
     // Step 4: Put device in bootloader mode
-    std::cout << std::endl << DpcColors::step("Step 4/6: Putting device in bootloader mode...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 5/7: Putting device in bootloader mode...") << std::endl;
     
     if (!device->is_in_bootloader_mode()) {
         if (!device->reset_to_bootloader()) {
@@ -116,7 +135,7 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     device->disconnect();
     
     // Step 5: Upload firmware (build and execute bossac command)
-    std::cout << std::endl << DpcColors::step("Step 5/6: Uploading firmware...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 6/7: Uploading firmware...") << std::endl;
     
     //  Wait for device to stabilize in bootloader mode
     std::cout << "Waiting for device to stabilize in bootloader mode..." << std::endl;
@@ -145,7 +164,7 @@ bool DpcFirmware::uploadFirmware(DpcDevice* device, const std::string& firmwareP
     std::cout << DpcColors::ok("Firmware uploaded successfully") << std::endl;
     
     // Step 6: Waiting for device reboot and restore settings
-    std::cout << std::endl << DpcColors::step("Step 6/6: Waiting for device reboot and restoring settings...") << std::endl;
+    std::cout << std::endl << DpcColors::step("Step 7/7: Waiting for device reboot and restoring settings...") << std::endl;
     
     std::cout << "Waiting for device to reboot..." << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(4));

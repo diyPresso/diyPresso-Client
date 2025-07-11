@@ -39,11 +39,13 @@ set(SOURCES
     src/DpcSettings.cpp
     src/DpcFirmware.cpp
     src/DpcColors.cpp
+    src/DpcDownload.cpp
 )
 
 # Find packages from vcpkg
 find_package(CLI11 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(cpr CONFIG REQUIRED)
 
 # Find libusbp using multiple approaches
 find_package(unofficial-libusbp CONFIG QUIET)
@@ -102,6 +104,7 @@ target_link_libraries(diypresso PRIVATE
     CLI11::CLI11
     nlohmann_json::nlohmann_json 
     ${LIBUSBP_TARGET}
+    cpr::cpr
     ${PLATFORM_LIBS}
 )
 

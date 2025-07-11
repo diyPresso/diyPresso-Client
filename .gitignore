@@ -26,10 +26,10 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+# # Executables
+# *.exe
+# *.out
+# *.app
 
 # Build and cache directories
 build/
@@ -42,3 +42,8 @@ settings_20*.json
 *.log
 
 .DS_Store
+compile_commands.json
+firmware.bin.backup.*
+
+# VirusTotal CLI (downloaded binary)
+bin/virus-total/

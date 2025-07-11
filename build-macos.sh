@@ -84,12 +84,14 @@ echo "Installing ARM64 dependencies..."
 $VCPKG_CMD install nlohmann-json:arm64-osx
 $VCPKG_CMD install cli11:arm64-osx
 $VCPKG_CMD install libusbp:arm64-osx
+$VCPKG_CMD install cpr:arm64-osx
 
 # Install for x64
 echo "Installing x64 dependencies..."
 $VCPKG_CMD install nlohmann-json:x64-osx
 $VCPKG_CMD install cli11:x64-osx
 $VCPKG_CMD install libusbp:x64-osx
+$VCPKG_CMD install cpr:x64-osx
 
 if [ $? -ne 0 ]; then
     print_error "Failed to install dependencies via vcpkg"
@@ -229,7 +231,9 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
         cp "bin/bossac/bossac" "bin/package-macos/"
         chmod +x "bin/package-macos/bossac"
     else
-        print_warning "bossac not found!"
+        print_error "bossac not found at bin/bossac/bossac"
+        echo "The macOS package requires bossac for firmware uploads."
+        echo "Please ensure bossac is available in bin/bossac/ directory."
         exit 1
     fi
     
@@ -261,15 +265,6 @@ if [ $SKIP_PACKAGE -eq 0 ]; then
         fi
     else
         print_warning "bossac not found for signing!"
-    fi
-    
-    # Copy firmware.bin
-    if [ -f "bin/firmware/firmware.bin" ]; then
-        echo "Copying firmware.bin..."
-        cp "bin/firmware/firmware.bin" "bin/package-macos/"
-    else
-        print_warning "firmware.bin not found!"
-        exit 1
     fi
     
     # Copy LICENSE
