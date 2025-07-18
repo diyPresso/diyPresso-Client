@@ -53,6 +53,50 @@ C++ management client for diyPresso espresso machine. This application provides 
 > **Tip:** If you see "Device not found," make sure the diyPresso is fully powered off before connecting the USB cable.
 
 
+## 🍎 macOS User Guide - Firmware Update
+
+**How to update the firmware of your diyPresso machine on macOS:**
+
+1. **Download the management client with new firmware**
+   - Go to the [release page](https://github.com/diyPresso/diyPresso-Client/releases/latest) of this github repository.
+   - Click **diyPresso-Client-macOS.zip** to download it.
+
+   <img src="images/macos_step_1.png" alt="Download the macOS package" width="360">
+
+2. **Extract the files**
+   - Open your **Downloads** folder.
+   - Double-click `diyPresso-Client-macOS.zip` to extract it automatically using Archive Utility.
+
+3. **Open Terminal at this folder**
+   - **Right-click** the newly created folder and select **New Terminal at Folder**.
+   - Alternatively, open Terminal and drag the folder into the Terminal window to navigate to it.
+
+   <img src="images/macos_step_3.png" alt="Open Terminal at Folder" width="500">
+
+4. **Turn off your diyPresso machine**
+   - Make sure your diyPresso machine is **fully turned off**.
+   - Do **not** connect the USB cable yet.
+
+5. **Start the Firmware Upload**
+   - In the Terminal window, type the command below and press **Enter**:
+     ```
+     ./diypresso upload-firmware
+     ```
+
+   <img src="images/macos_step_5.png" alt="Run the firmware upload command" width="600">
+
+6. **Connect the USB Cable**
+   - The tool will first download the latest firmware from GitHub automatically.
+   - When prompted for device connection, plug the USB cable into your diyPresso machine and your computer.
+   - The firmware upload will start automatically. Watch the messages in the Terminal.
+
+7. **Final Steps**
+   - Unplug the USB cable.
+   - Turn on your diyPresso machine and enjoy your upgraded coffee!
+
+> **Tip:** If you see "Device not found," make sure the diyPresso is fully powered off before connecting the USB cable. On macOS, you may need to grant Terminal permission to access USB devices if prompted.
+
+
 # 🎪 Other Usage Examples
 
 ```bash
@@ -273,7 +317,7 @@ build-windows.bat
 ## 🚧 TODO
 
 Must:
-- [ ] **macOS user instructions**
+- [x] **macOS user instructions**
 
 Nice to have:
 - [ ] **Remove std::exit() usage** - Replace with proper error handling and return codes throughout codebase

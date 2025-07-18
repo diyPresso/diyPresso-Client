@@ -317,14 +317,8 @@ bool DpcDownload::isValidVersion(const std::string& version) {
 }
 
 std::string DpcDownload::sanitizeVersion(const std::string& version) {
-    std::string clean = version;
-    
-    // Ensure version starts with 'v'
-    if (!clean.empty() && clean[0] != 'v') {
-        clean = "v" + clean;
-    }
-    
-    return clean;
+    // No longer prepends 'v' -- uses the tag as returned by GitHub
+    return version;
 }
 
 bool DpcDownload::filesAreIdentical(const std::string& file1, const std::string& file2) {
