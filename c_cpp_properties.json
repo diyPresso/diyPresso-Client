@@ -4,32 +4,66 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/cli",
+                "${workspaceFolder}/src/gui",
                 "${env:VCPKG_ROOT}/installed/arm64-osx/include",
                 "${env:VCPKG_ROOT}/installed/arm64-osx/include/**",
                 "${env:VCPKG_ROOT}/installed/x64-osx/include",
-                "${env:VCPKG_ROOT}/installed/x64-osx/include/**"
+                "${env:VCPKG_ROOT}/installed/x64-osx/include/**",
+                "/opt/homebrew/include",
+                "/opt/homebrew/include/**",
+                "/opt/homebrew/lib/QtCore.framework/Headers",
+                "/opt/homebrew/lib/QtWidgets.framework/Headers", 
+                "/opt/homebrew/lib/QtGui.framework/Headers",
+                "/opt/homebrew/share/qt/mkspecs/macx-clang",
+                "/usr/local/include",
+                "/usr/local/include/**"
             ],
-            "defines": [],
+            "defines": [
+                "QT_CORE_LIB",
+                "QT_GUI_LIB", 
+                "QT_WIDGETS_LIB",
+                "QT_NO_DEBUG"
+            ],
             "macFrameworkPath": [
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks",
+                "/opt/homebrew/lib"
             ],
             "compilerPath": "/usr/bin/clang++",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
             "compilerArgs": [
                 "-std=c++17",
                 "-isystem",
                 "${env:VCPKG_ROOT}/installed/arm64-osx/include",
                 "-isystem",
-                "${env:VCPKG_ROOT}/installed/x64-osx/include"
+                "${env:VCPKG_ROOT}/installed/x64-osx/include",
+                "-isystem",
+                "/opt/homebrew/include",
+                "-isystem",
+                "/opt/homebrew/lib/QtCore.framework/Headers",
+                "-isystem",
+                "/opt/homebrew/lib/QtWidgets.framework/Headers",
+                "-isystem",
+                "/opt/homebrew/lib/QtGui.framework/Headers",
+                "-iframework",
+                "/opt/homebrew/lib",
+                "-isystem",
+                "/usr/local/include"
             ]
         },
         {
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/cli",
+                "${workspaceFolder}/src/gui",
                 "${env:VCPKG_ROOT}/installed/x64-windows/include",
                 "${env:VCPKG_ROOT}/installed/x64-windows/include/**"
             ],

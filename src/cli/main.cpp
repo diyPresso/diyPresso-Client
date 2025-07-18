@@ -5,12 +5,12 @@
 #include <chrono>
 #include <thread>
 #include <csignal>
-#include "DpcDevice.h"
-#include "DpcSerial.h"
-#include "DpcSettings.h"
-#include "DpcFirmware.h"
-#include "DpcDownload.h"
-#include "DpcColors.h"
+#include "../core/DpcDevice.h"
+#include "../core/DpcSerial.h"
+#include "../core/DpcSettings.h"
+#include "../core/DpcFirmware.h"
+#include "../core/DpcDownload.h"
+#include "../core/DpcColors.h"
 
 const std::string VERSION = "1.0.0";
 

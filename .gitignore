@@ -47,3 +47,7 @@ firmware.bin.backup.*
 
 # VirusTotal CLI (downloaded binary)
 bin/virus-total/
+
+test-build/
+test-build-x64/
+build-universal/

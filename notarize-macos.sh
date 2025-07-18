@@ -50,17 +50,35 @@ fi
 # Check if executables are signed
 print_info "Checking code signatures..."
 
+# Check CLI executable
+if [ -f "$PACKAGE_DIR/diypresso" ]; then
 if ! codesign --verify "$PACKAGE_DIR/diypresso" >/dev/null 2>&1; then
-    print_error "diypresso is not properly signed!"
-    exit 1
+        print_error "diypresso CLI is not properly signed!"
+        exit 1
+    fi
+    print_success "diypresso CLI is properly signed"
+else
+    print_warning "diypresso CLI not found in package"
 fi
 
+# Check GUI executable
+if [ -f "$PACKAGE_DIR/diypresso-gui" ]; then
+    if ! codesign --verify "$PACKAGE_DIR/diypresso-gui" >/dev/null 2>&1; then
+        print_error "diypresso-gui is not properly signed!"
+    exit 1
+    fi
+    print_success "diypresso-gui is properly signed"
+else
+    print_warning "diypresso-gui not found in package"
+fi
+
+# Check bossac
 if ! codesign --verify "$PACKAGE_DIR/bossac" >/dev/null 2>&1; then
     print_error "bossac is not properly signed!"
     exit 1
 fi
 
-print_success "Both executables are properly signed"
+print_success "All found executables are properly signed"
 
 # Get Apple ID and password from Keychain
 if [ -z "$APPLE_ID" ]; then
@@ -140,7 +158,7 @@ if [ -n "$SUBMISSION_ID" ]; then
     TEMP_DIR=$(mktemp -d)
     unzip -q "$ZIP_FILE" -d "$TEMP_DIR"
     
-    for exe in diypresso bossac; do
+    for exe in diypresso diypresso-gui bossac; do
         EXE_PATH="$TEMP_DIR/$exe"
         if [ -x "$EXE_PATH" ]; then
             print_info "Verifying $exe signature..."
